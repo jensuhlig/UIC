@@ -38,10 +38,10 @@ namespace UIC.EDM.EApi.Gpio
         
 
         public void Initialize() {
-            _eapiInitializer.Init();
-            var gpioCapabilities = _gpioDriver.GetGpioCapabilities();
+            //_eapiInitializer.Init();
+            //var gpioCapabilities = _gpioDriver.GetGpioCapabilities();
             _edmCapability = CreateEdmCapability();
-            Test(gpioCapabilities);
+            //Test(gpioCapabilities);
         }
 
         private EdmCapability CreateEdmCapability() {
@@ -95,11 +95,13 @@ namespace UIC.EDM.EApi.Gpio
             return _edmCapability;
         }
 
+        private bool fakePinValue = true;
         public DatapointValue GetValueFor(DatapointDefinition datapoint) {
-            var eapiGpioId = _gpioIdMap[datapoint.Uri];
-            GpioLevel gpioLevel = _gpioDriver.GetLevel();
-            var levelOf = gpioLevel.GetLevelOf(eapiGpioId);
-            return new SgetDatapointValue(levelOf, datapoint);
+            return new SgetDatapointValue(fakePinValue, datapoint); 
+            //var eapiGpioId = _gpioIdMap[datapoint.Uri];
+            //GpioLevel gpioLevel = _gpioDriver.GetLevel();
+            //var levelOf = gpioLevel.GetLevelOf(eapiGpioId);
+            //return new SgetDatapointValue(levelOf, datapoint);
         }
 
         public AttributeValue GetValueFor(AttributeDefinition attribute) {
@@ -109,15 +111,19 @@ namespace UIC.EDM.EApi.Gpio
         public bool Handle(Command command) {
             EapiGpioId pin;
             if (_onCommandMap.TryGetValue(command.CommandDefinition.Uri, out pin)) {
-                _gpioDriver.SetLevel(pin, GpioLevelEnum.EapiGpioHigh);
-                var gpioLevel = _gpioDriver.GetLevel();
-                _action(new SgetDatapointValue(gpioLevel.GetLevelOf(pin), command.CommandDefinition.RelatedDatapoint));
+                fakePinValue = true;
+                _action(new SgetDatapointValue(fakePinValue, command.CommandDefinition.RelatedDatapoint));
+                //_gpioDriver.SetLevel(pin, GpioLevelEnum.EapiGpioHigh);
+                //var gpioLevel = _gpioDriver.GetLevel();
+                //_action(new SgetDatapointValue(gpioLevel.GetLevelOf(pin), command.CommandDefinition.RelatedDatapoint));
                 return true;
             }
             if (_offCommandMap.TryGetValue(command.CommandDefinition.Uri, out pin)) {
-                _gpioDriver.SetLevel(pin, GpioLevelEnum.EapiGpioLow);
-                var gpioLevel = _gpioDriver.GetLevel();
-                _action(new SgetDatapointValue(gpioLevel.GetLevelOf(pin), command.CommandDefinition.RelatedDatapoint));
+                fakePinValue = false;
+                _action(new SgetDatapointValue(fakePinValue, command.CommandDefinition.RelatedDatapoint));
+                //_gpioDriver.SetLevel(pin, GpioLevelEnum.EapiGpioLow);
+                //var gpioLevel = _gpioDriver.GetLevel();
+                //_action(new SgetDatapointValue(gpioLevel.GetLevelOf(pin), command.CommandDefinition.RelatedDatapoint));
                 return true;
             }
 
